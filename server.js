@@ -2,22 +2,34 @@
  * Created by Ronnie on 11/9/2015.
  */
 
+// CALL THE PACKAGES --------------------
+var express    = require('express');		// call express
+var app        = express(); 				// define our app using express
+var bodyParser = require('body-parser'); 	// get body-parser
+var morgan     = require('morgan'); 		// used to see requests
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://rking:d!cksW1ngs@ds051553.mongolab.com:51553/testsuite'); // connect to our database
+var Mentor       = require('./app/models/mentor');
+var port       = process.env.PORT || 1911; // set the port for our app
 
-var Mentor     = require('./app/models/mentor');
-
-// call the packages we need
-var express    = require('express');        // call express
-var app        = express();                 // define our app using express
-var bodyParser = require('body-parser');
-
-// configure app to use bodyParser()
-// this will let us get the data from a POST
+// APP CONFIGURATION ---------------------
+// use body parser so we can grab information from POST requests
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-var port = process.env.PORT || 1911;        // set our port
+// configure our app to handle CORS requests
+app.use(function(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
+    next();
+});
+
+// log all requests to the console
+app.use(morgan('dev'));
+
+// connect to our database (hosted on modulus.io)
+mongoose.connect('mongodb://rking:d!cksW1ngs@ds051553.mongolab.com:51553/testsuite');
+
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -33,21 +45,24 @@ router.use(function(req, res, next) {
 });
 
 // ---------Mentor-------------------------------------
-router.route('/mentor')
+router.route('/mentors')
 
-// create a topic (accessed at POST http://localhost:8080/api/statements)
     .post(function(req, res) {
 
-        console.log('About to create a mentor');
-        var mentor = new Mentor();
-        mentor.firstname = req.body.firstname;
-        mentor.lastname = req.body.lastname;
+        var mentor = new Mentor();		// create a new instance of the User model
+        mentor.firstname = req.body.firstname;  // set the users name (comes from the request)
+        mentor.lastname = req.body.lastname;  // set the users username (comes from the request)
 
-        // save mentor and check for errors
         mentor.save(function(err) {
-            if (err)
-                res.send(err);
+            if (err) {
+                // duplicate entry
+                if (err.code == 11000)
+                    return res.json({ success: false, message: 'A user with that username already exists. '});
+                else
+                    return res.send(err);
+            }
 
+            // return a message
             res.json({ message: 'Mentor created!' });
         });
 
@@ -56,9 +71,9 @@ router.route('/mentor')
 // get all the mentors
     .get(function(req, res) {
         Mentor.find(function(err, mentors) {
-            if (err)
-                res.send(err);
+            if (err) return res.send(err);
 
+            // return the users
             res.json(mentors);
         });
     });
