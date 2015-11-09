@@ -1,0 +1,16 @@
+{
+  "name": "suitejs",
+  "version": "1.0.0",
+  "description": "RESTFUL API for ScratchwerkSuite",
+  "main": "server.js",
+  "dependencies": {
+        "express": "~4.0.0",
+        "mongoose": "~3.6.13",
+        "body-parser": "~1.0.1"
+    },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scratchwerk/SuiteJS.git"
+  },
+  "author": "Scratchwerk, LLC"
+}
